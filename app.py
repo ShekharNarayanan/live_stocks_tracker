@@ -1,32 +1,43 @@
 # app.py  ── Top-20 losers & gainers with cap-size
 import streamlit as st
 import pandas as pd
-import requests, io, yfinance as yf, numpy as np, random          # ← CHANGED
+import requests, io, yfinance as yf, numpy as np, random
 from datetime import datetime
 from american import load_sp500, load_spmid400, load_spsmall600
 
-# ── SETTINGS ─────────────────────────────────────────────────────────────────
+# ── SETTINGS ────────────────────────────────────────────────────────────────
 st.set_page_config(layout="wide")
 st.title("📉📈 US Large / Mid / Small — 20-Day Losers & Gainers")
 
 # ── SIDEBAR ──────────────────────────────────────────────────────────────────
-cap_size = st.sidebar.radio("Cap Size universe",
-                            ["Large (S&P 500)", "Mid (S&P 400)", "Small (S&P 600)"])
-days     = st.sidebar.number_input("Look-back window (days)", 5, 90, 30)
-max_tks  = st.sidebar.number_input("Max symbols to scan", 10, 600, 100)
-run_btn  = st.sidebar.button("🔍 Run Scan")
+cap_size = st.sidebar.radio(
+    "Cap Size universe",
+    ["Large (S&P 500)", "Mid (S&P 400)", "Small (S&P 600)"]
+)
+days    = st.sidebar.number_input("Look-back window (days)", 5, 90, 30)
+max_tks = st.sidebar.number_input("Max symbols to scan", 10, 600, 100)
+run_btn = st.sidebar.button("🔍 Run Scan")
 
-# ─── PLACEHOLDER FOR ONE-TIME LOADING MESSAGE ────────────────────────────────
-loading_msg = st.empty()                     # empty place holder for automatic loading
+# one-time sidebar note
+st.sidebar.info("Tip: changing any sidebar value refreshes results automatically.")
 
-if "has_run" not in st.session_state:
-    st.session_state.has_run = True
-    run = True
-    loading_msg.info("🕵️‍♂️ Initial scan running…")   
-else:
-    run = run_btn
+# ── PLACEHOLDER FOR LOADING MESSAGE ─────────────────────────────────────────
+loading_msg = st.empty()
 
-# ── HELPERS ──────────────────────────────────────────────────────────────────
+# tuple of current sidebar values
+params = (cap_size, days, max_tks)
+
+# initialize session-state slots
+if "prev_params" not in st.session_state:
+    st.session_state.prev_params = None
+if "losers" not in st.session_state:
+    st.session_state.losers = pd.DataFrame()
+    st.session_state.gainers = pd.DataFrame()
+
+# refresh needed if button clicked *or* params changed
+needs_refresh = run_btn or (params != st.session_state.prev_params)
+
+# ── HELPERS ─────────────────────────────────────────────────────────────────
 def rsi(series, n=14):
     delta = series.diff()
     gain  = delta.clip(lower=0).rolling(n).mean()
@@ -42,8 +53,10 @@ def render_blocks(df):
             st.caption(row.Sector or "—")
             arrow = "↓" if row.Change < 0 else "↑"
             color = "red" if row.Change < 0 else "green"
-            st.markdown(f"<div style='text-align:center;font-size:18px;color:{color}'>"
-                        f"{arrow} {row.Change:+.2f}%</div>", unsafe_allow_html=True)
+            st.markdown(
+                f"<div style='text-align:center;font-size:18px;color:{color}'>"
+                f"{arrow} {row.Change:+.2f}%</div>", unsafe_allow_html=True
+            )
             st.markdown(
                 f"<div style='text-align:center;'>"
                 f"<span style='color:green;'>Now €{row.Today:.2f}</span><br>"
@@ -54,22 +67,22 @@ def render_blocks(df):
             )
 
 # ── MAIN SCAN ───────────────────────────────────────────────────────────────
-if run:
-    # pick universe
-    base = (load_sp500() if cap_size.startswith("Large")
-            else load_spmid400() if cap_size.startswith("Mid")
-            else load_spsmall600())
+if needs_refresh:
+    loading_msg.info("🔄 Fetching data… please wait.")
+    # load universe
+    universe = (load_sp500() if cap_size.startswith("Large")
+                else load_spmid400() if cap_size.startswith("Mid")
+                else load_spsmall600())
 
-    random.shuffle(base)                                             #  always return some losers or winners
-    symbols = base[:max_tks]
+    # pick max_tks tickers (random sample if bigger than max_tks)
+    symbols = (random.sample(universe, max_tks)
+               if len(universe) > max_tks else universe)
 
-    if not symbols:
-        st.error("❌ Ticker list empty.")
-        st.stop()
-
-    data = yf.download(symbols, period="1y", interval="1d",
-                       group_by="ticker", threads=True,
-                       progress=False, auto_adjust=False)
+    data = yf.download(
+        symbols, period="1y", interval="1d",
+        group_by="ticker", threads=True,
+        progress=False, auto_adjust=False
+    )
 
     recs = []
     for sym in symbols:
@@ -78,13 +91,11 @@ if run:
         if closes is None or len(closes.dropna()) < days + 15:
             continue
         closes, vols = closes.dropna(), vols.dropna()
-        ago, now     = closes.shift(days).iloc[-1], closes.iloc[-1]
-        pct          = (now / ago - 1) * 100
-        rsi_val      = rsi(closes).iloc[-1]
-        avg_vol      = vols.tail(30).mean()
-        sector       = yf.Ticker(sym).info.get("sector", "—")
-
-        # keep everything; RSI just for display  ← CHANGED (old filter removed)
+        ago, now = closes.shift(days).iloc[-1], closes.iloc[-1]
+        pct      = (now / ago - 1) * 100
+        rsi_val  = rsi(closes).iloc[-1]
+        avg_vol  = vols.tail(30).mean()
+        sector   = yf.Ticker(sym).info.get("sector", "—")
         recs.append({
             "Symbol": sym, "Sector": sector,
             "Change": pct, "Today": now, "Ago": ago,
@@ -92,14 +103,17 @@ if run:
         })
 
     df = pd.DataFrame(recs)
-    st.session_state["losers"]  = df[df.Change < 0].nsmallest(20, "Change")
-    st.session_state["gainers"] = df[df.Change > 0].nlargest(20, "Change")
+    st.session_state.losers  = df[df.Change < 0].nsmallest(20, "Change")
+    st.session_state.gainers = df[df.Change > 0].nlargest(20, "Change")
+    st.session_state.prev_params = params
+    loading_msg.empty()  # ← clear one-time / refresh spinner
 
 # ── DISPLAY ─────────────────────────────────────────────────────────────────
-if "losers" in st.session_state:
-    view   = st.selectbox("Show", ["Losers", "Gainers"])
-    subset = st.session_state["losers"] if view == "Losers" else st.session_state["gainers"]
+if not st.session_state.losers.empty:
+    view = st.selectbox("Show", ["Losers", "Gainers"])
+    subset = (st.session_state.losers if view == "Losers"
+              else st.session_state.gainers)
     st.header(f"{view} – {cap_size} – last {days} days")
     render_blocks(subset)
 else:
-    st.info("Set parameters and click 🔍 Run Scan.")
+    st.info("No data yet. Adjust sidebar and click run if needed.")
