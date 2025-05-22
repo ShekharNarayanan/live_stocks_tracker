@@ -74,15 +74,28 @@ if needs_refresh:
                 else load_spmid400() if cap_size.startswith("Mid")
                 else load_spsmall600())
 
-    # pick max_tks tickers (random sample if bigger than max_tks)
-    symbols = (random.sample(universe, max_tks)
-               if len(universe) > max_tks else universe)
+    # get all the symbols from the chosen universe
+    symbols = universe                      # scan every ticker in the bucket
 
-    data = yf.download(
-        symbols, period="1y", interval="1d",
-        group_by="ticker", threads=True,
-        progress=False, auto_adjust=False
-    )
+# ── FAST BULK DOWNLOAD (chunked) ───────────────────────────────────────────
+    chunk_size = 150                        # tweak if you like
+    frames = []
+    for i in range(0, len(symbols), chunk_size):
+        chunk = symbols[i:i + chunk_size]
+        frames.append(
+            yf.download(
+                chunk,
+                period="1y",
+                interval="1d",
+                group_by="ticker",
+                threads=True,
+                progress=False,
+                auto_adjust=False
+            )
+        )
+
+    # concat along columns → same structure as a single big call
+    data = pd.concat(frames, axis=1)
 
     recs = []
     for sym in symbols:
