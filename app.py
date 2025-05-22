@@ -4,6 +4,7 @@ import pandas as pd
 import requests, io, yfinance as yf, numpy as np, random
 from datetime import datetime
 from american import load_sp500, load_spmid400, load_spsmall600
+import time
 
 # ── SETTINGS ────────────────────────────────────────────────────────────────
 st.set_page_config(layout="wide")
@@ -20,7 +21,7 @@ max_scan = st.sidebar.number_input("Max symbols to scan (set to universe size fo
 run_btn = st.sidebar.button("🔍 Run Scan")
 
 # one-time sidebar note
-st.sidebar.info("Tip: changing any sidebar value refreshes results automatically.\nPicking the whole universe will take longer to load.")
+st.sidebar.info("Tip: changing any sidebar value refreshes results automatically.")
 
 # ── PLACEHOLDER FOR LOADING MESSAGE ─────────────────────────────────────────
 loading_msg = st.empty()
@@ -79,17 +80,23 @@ if needs_refresh:
     if max_scan >= len(universe):                 # full scan
         symbols = universe
         st.sidebar.success(f"Scanning entire universe ({len(universe)} tickers). "
-                        "This gives objective top-20.")
+                        "This gives objective top-20. Will take a bit longer than a sampled scan.")
     else:                                         # sampled scan
         symbols = random.sample(universe, max_scan)
         st.sidebar.warning(f"Scanning a random sample of {max_scan} / {len(universe)} "
                         "tickers (faster, may miss some extremes).")
 
 # ── FAST BULK DOWNLOAD (chunked) ───────────────────────────────────────────
-    chunk_size = 150                        # tweak if you like
+    chunk_size = 150
+    chunks     = [symbols[i:i + chunk_size]
+                for i in range(0, len(symbols), chunk_size)]
+
+    bar_ph   = st.progress(0, "⏳ downloading price history…")   # bar placeholder
+    text_ph  = st.empty()                                       # timer placeholder
+    start_ts = time.time()
+
     frames = []
-    for i in range(0, len(symbols), chunk_size):
-        chunk = symbols[i:i + chunk_size]
+    for n, chunk in enumerate(chunks, start=1):
         frames.append(
             yf.download(
                 chunk,
@@ -101,8 +108,11 @@ if needs_refresh:
                 auto_adjust=False
             )
         )
+        elapsed = time.time() - start_ts
+        bar_ph.progress(n / len(chunks))
+        text_ph.text(f"⏳ downloading price history… {elapsed:0.1f}s")
 
-    # concat along columns → same structure as a single big call
+    bar_ph.empty(); text_ph.empty()                             # clear widgets
     data = pd.concat(frames, axis=1)
 
     recs = []
@@ -116,7 +126,7 @@ if needs_refresh:
         pct      = (now / ago - 1) * 100
         rsi_val  = rsi(closes).iloc[-1]
         avg_vol  = vols.tail(30).mean()
-        sector   = yf.Ticker(sym).info.get("sector", "—")
+        sector   = "-"
         recs.append({
             "Symbol": sym, "Sector": sector,
             "Change": pct, "Today": now, "Ago": ago,
