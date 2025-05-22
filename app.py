@@ -15,17 +15,18 @@ cap_size = st.sidebar.radio(
     ["Large (S&P 500)", "Mid (S&P 400)", "Small (S&P 600)"]
 )
 days    = st.sidebar.number_input("Look-back window (days)", 5, 90, 30)
-max_tks = st.sidebar.number_input("Max symbols to scan", 10, 600, 100)
+max_scan = st.sidebar.number_input("Max symbols to scan (set to universe size for full scan)",
+                                   10, 600, 600)      # default 600
 run_btn = st.sidebar.button("🔍 Run Scan")
 
 # one-time sidebar note
-st.sidebar.info("Tip: changing any sidebar value refreshes results automatically.")
+st.sidebar.info("Tip: changing any sidebar value refreshes results automatically.\nPicking the whole universe will take longer to load.")
 
 # ── PLACEHOLDER FOR LOADING MESSAGE ─────────────────────────────────────────
 loading_msg = st.empty()
 
 # tuple of current sidebar values
-params = (cap_size, days, max_tks)
+params = (cap_size, days, max_scan)
 
 # initialize session-state slots
 if "prev_params" not in st.session_state:
@@ -74,8 +75,15 @@ if needs_refresh:
                 else load_spmid400() if cap_size.startswith("Mid")
                 else load_spsmall600())
 
-    # get all the symbols from the chosen universe
-    symbols = universe                      # scan every ticker in the bucket
+    # user determines max scan size
+    if max_scan >= len(universe):                 # full scan
+        symbols = universe
+        st.sidebar.success(f"Scanning entire universe ({len(universe)} tickers). "
+                        "This gives objective top-20.")
+    else:                                         # sampled scan
+        symbols = random.sample(universe, max_scan)
+        st.sidebar.warning(f"Scanning a random sample of {max_scan} / {len(universe)} "
+                        "tickers (faster, may miss some extremes).")
 
 # ── FAST BULK DOWNLOAD (chunked) ───────────────────────────────────────────
     chunk_size = 150                        # tweak if you like
