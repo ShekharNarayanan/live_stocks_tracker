@@ -13,9 +13,9 @@ st.title("📉📈 US Large / Mid / Small — 20-Day Losers & Gainers")
 # ── SIDEBAR ──────────────────────────────────────────────────────────────────
 cap_size = st.sidebar.radio(
     "Cap Size universe",
-    ["Large (S&P 500)", "Mid (S&P 400)", "Small (S&P 600)"]
+    ["Large (S&P 500)", "Mid (S&P 400)", "Small (S&P 600)"] # categories on the side bar
 )
-days    = st.sidebar.number_input("Look-back window (days)", 5, 90, 30)
+days    = st.sidebar.number_input("Look-back window (days)", 5, 90, 30) # number of days to look back
 max_scan = st.sidebar.number_input("Max symbols to scan (set to universe size for full scan)",
                                    10, 600, 600)      # default 600
 run_btn = st.sidebar.button("🔍 Run Scan")
@@ -41,6 +41,17 @@ needs_refresh = run_btn or (params != st.session_state.prev_params)
 
 # ── HELPERS ─────────────────────────────────────────────────────────────────
 def rsi(series, n=14):
+    """
+    Calculate the Relative Strength Index (RSI) for a given series. Find more at 
+    https://www.investopedia.com/terms/r/rsi.asp
+
+    Args:
+        series (_type_): _description_
+        n (int, optional): Number of periods. Defaults to 14.
+
+    Returns:
+        _type_: _description_
+    """
     delta = series.diff()
     gain  = delta.clip(lower=0).rolling(n).mean()
     loss  = -delta.clip(upper=0).rolling(n).mean()
@@ -119,7 +130,8 @@ if needs_refresh:
         bar_ph.progress(n / len(chunks))
         text_ph.text(f"⏳ downloading price history… {elapsed:0.1f}s")
 
-    bar_ph.empty(); text_ph.empty()                             # clear widgets
+    bar_ph.empty()
+    text_ph.empty()                             # clear widgets
     data = pd.concat(frames, axis=1)
 
     recs = []
@@ -141,10 +153,19 @@ if needs_refresh:
         })
 
     df = pd.DataFrame(recs)
-    st.session_state.losers  = df[df.Change < 0].nsmallest(20, "Change")
-    st.session_state.gainers = df[df.Change > 0].nlargest(20, "Change")
+
+    # if the look back returns no tickers, we need to handle that
+    if df.empty:                                     
+        loading_msg.empty()
+        st.warning("No tickers had enough history for that look-back window.")
+        st.session_state.losers  = pd.DataFrame()
+        st.session_state.gainers = pd.DataFrame()
+    else:                                            
+        st.session_state.losers  = df[df["Change"] < 0].nsmallest(20, "Change")
+        st.session_state.gainers = df[df["Change"] > 0].nlargest(20, "Change")
+
     st.session_state.prev_params = params
-    loading_msg.empty()  # ← clear one-time / refresh spinner
+    loading_msg.empty()
 
 # ── DISPLAY ─────────────────────────────────────────────────────────────────
 if not st.session_state.losers.empty:

@@ -5,7 +5,7 @@ import streamlit as st
 # ----------------------------------------------------------------------
 # Utilities
 # ----------------------------------------------------------------------
-@st.cache_data(ttl=86400)
+@st.cache_data(ttl=86400) # save the loaded data for 24 hours
 def _scrape_table(url: str, symbol_col: str = "Symbol") -> list[str]:
     """
     Read the first HTML table on *url* and return the column *symbol_col*
@@ -18,9 +18,8 @@ def _scrape_table(url: str, symbol_col: str = "Symbol") -> list[str]:
     tickers = tickers.str.replace(r"\.(\w)$", r"-\1", regex=True)
     return tickers.tolist()
 
-# ----------------------------------------------------------------------
-# Public loaders
-# ----------------------------------------------------------------------
+
+# ──Public loaders ────────────────────────────────────────────────────────────────
 @st.cache_data(ttl=86400)
 def load_sp500() -> list[str]:
     """Return the 500 S&P-500 tickers from Wikipedia."""
