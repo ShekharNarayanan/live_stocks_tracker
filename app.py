@@ -51,22 +51,29 @@ def render_blocks(df):
     cols = st.columns(4)
     for idx, row in df.reset_index(drop=True).iterrows():
         with cols[idx % 4]:
-            st.subheader(row.Symbol)
-            st.caption(row.Sector or "—")
-            arrow = "↓" if row.Change < 0 else "↑"
-            color = "red" if row.Change < 0 else "green"
+            # every block wrapped in a bordered div
             st.markdown(
-                f"<div style='text-align:center;font-size:18px;color:{color}'>"
-                f"{arrow} {row.Change:+.2f}%</div>", unsafe_allow_html=True
+                f"""
+                <div style="
+                     border:6px solid #004080;
+                     border-radius:6px;
+                     padding:10px 12px;
+                     margin-bottom:12px;
+                     ">
+                    <h3 style="margin:0">{row.Symbol}</h3>
+                    <small style="color:#aaaaaa;">{row.Sector if row.Sector!='-' else ''}</small><br>
+                    <span style="font-size:18px; color:{'red' if row.Change<0 else 'green'};">
+                        {'↓' if row.Change<0 else '↑'} {row.Change:+.2f}%
+                    </span><br>
+                    <span style="color:green;">Now €{row.Today:.2f}</span><br>
+                    <span style="color:red;">{days} d ago €{row.Ago:.2f}</span><br>
+                    RSI-14: <b>{row.RSI:.1f}</b><br>
+                    Avg Vol (30 d): {row.AvgVol:,.0f}
+                </div>
+                """,
+                unsafe_allow_html=True
             )
-            st.markdown(
-                f"<div style='text-align:center;'>"
-                f"<span style='color:green;'>Now €{row.Today:.2f}</span><br>"
-                f"<span style='color:red;'>{days} d ago €{row.Ago:.2f}</span><br>"
-                f"RSI-14: <b>{row.RSI:.1f}</b><br>"
-                f"Avg Vol (30 d): {row.AvgVol:,.0f}"
-                f"</div>", unsafe_allow_html=True
-            )
+
 
 # ── MAIN SCAN ───────────────────────────────────────────────────────────────
 if needs_refresh:
