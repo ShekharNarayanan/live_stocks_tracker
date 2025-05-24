@@ -15,7 +15,7 @@ A simple Streamlit web-app to scan US large-, mid- and small-cap universes for t
 
 ---
 <!---usage video --->
-![usage][media/usage_gif.gif]
+![usage](media/usage_gif.gif)
 
 
 
