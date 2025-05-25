@@ -1,5 +1,25 @@
 import numpy as np
 import pandas as pd
+import streamlit as st
+
+@st.cache_data(ttl=86400)
+def _get_logo_from_symbol(symbol:str, size=100):
+    """
+    Get the logo URL for a given stock symbol from Parqet. Check it out here:
+    https://www.parqet.com/api/logos
+
+    Args:
+        symbol (str): Stock symbol to get the logo for, e.g. 'AAPL' for Apple Inc.
+        size (int, optional): Size of the logo in pixels. Defaults to 30 x30.
+
+    Returns:
+        url (str): URL of the logo image
+    """
+    img_url = f"https://assets.parqet.com/logos/symbol/{symbol}?format=jpg&size={size}"
+    
+    return img_url
+
+
 
 def _rsi(series:pd.Series, n=14):
     """
@@ -39,6 +59,11 @@ def get_ticker_stats(data,symbols,days):
     """
     ticker_metrics = []
     for sym in symbols:
+
+        # get company logo
+        logo = _get_logo_from_symbol(sym)
+
+        # get closing prices and volumes for the symbol
         closes = data.get(sym, {}).get("Close")
         vols   = data.get(sym, {}).get("Volume")
         if closes is None or len(closes.dropna()) < days + 15:
@@ -52,7 +77,8 @@ def get_ticker_stats(data,symbols,days):
         ticker_metrics.append({
             "Symbol": sym, "Sector": sector,
             "Change": pct, "Today": now, "Ago": ago,
-            "RSI": rsi_val, "AvgVol": avg_vol
+            "RSI": rsi_val, "AvgVol": avg_vol,
+            "Logo": logo
         })
 
     return ticker_metrics
