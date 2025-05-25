@@ -11,18 +11,19 @@ A simple Streamlit web-app to scan US large-, mid- and small-cap universes for t
 - 📑 **Top 20 lists**: see your biggest losers & gainers side-by-side  
 - 📊 **Key metrics**: % change, RSI-14, average 30-day volume  
 - 🔄 **Auto-refresh**: results update instantly when you tweak sidebar controls  
-- 🏃‍♂️ **One-click scan**: or auto-run on first page load  
+- 🏃‍♂️ **One-click scan**: or auto-run on first page load
+- **....More to come soon!**
 
 ## Accessing the tracker
 
 ### Non Developers
-**More to come soon! I hope to make the web app live. Non developers will be able to access the tracker with a link 😁. **
+**I hope to make the web app live. Non developers will be able to access the tracker with a public url 😁.**
 
 ### Developers
-Please look ![here](https://github.com/ShekharNarayanan/live-stocks-tracker/blob/main/README.dev.md) to get started 💪.
+Checkout the [developer readme](https://github.com/ShekharNarayanan/live-stocks-tracker/blob/main/README.dev.md) to get started 💪.
 
 
 ---
 <!---usage video --->
-![usage][media/usage_gif.gif]
+![usage](media/usage_gif.gif)
 
