@@ -1,7 +1,6 @@
 @echo off
 REM 1) go to your app folder
 cd  "C:\Users\narayana\projects\personal\live-stocks-tracker\src"
-dir
 
 REM 2) activate conda
 call conda activate live-tracker
