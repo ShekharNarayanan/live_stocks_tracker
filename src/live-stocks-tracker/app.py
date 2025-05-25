@@ -4,8 +4,8 @@ import pandas as pd
 import requests, io, yfinance as yf, numpy as np, random
 from datetime import datetime
 from american import load_sp500, load_spmid400, load_spsmall600
-from utilities.ticker_info import  get_ticker_stats
-from utilities.adjust_ui import  render_company_blocks
+from utilities.ticker_info import get_ticker_stats
+from utilities.adjust_ui import render_company_blocks
 import time
 
 # ── SETTINGS ────────────────────────────────────────────────────────────────
@@ -15,11 +15,18 @@ st.title("📉📈 US Large / Mid / Small — 20-Day Losers & Gainers")
 # ── SIDEBAR ──────────────────────────────────────────────────────────────────
 cap_size = st.sidebar.radio(
     "Cap Size universe",
-    ["Large (S&P 500)", "Mid (S&P 400)", "Small (S&P 600)"] # categories on the side bar
+    [
+        "Large (S&P 500)",
+        "Mid (S&P 400)",
+        "Small (S&P 600)",
+    ],  # categories on the side bar
 )
-days    = st.sidebar.number_input("Look-back window (days)", 5, 90, 30) # number of days to look back
-max_scan = st.sidebar.number_input("Max symbols to scan (set to universe size for full scan)",
-                                   10, 600, 600)      # default 600
+days = st.sidebar.number_input(
+    "Look-back window (days)", 5, 90, 30
+)  # number of days to look back
+max_scan = st.sidebar.number_input(
+    "Max symbols to scan (set to universe size for full scan)", 10, 600, 600
+)  # default 600
 run_btn = st.sidebar.button("🔍 Run Scan")
 
 # one-time sidebar note
@@ -45,27 +52,34 @@ needs_refresh = run_btn or (params != st.session_state.prev_params)
 if needs_refresh:
     loading_msg.info("🔄 Fetching data… please wait.")
     # load universe
-    universe = (load_sp500() if cap_size.startswith("Large")
-                else load_spmid400() if cap_size.startswith("Mid")
-                else load_spsmall600())
+    universe = (
+        load_sp500()
+        if cap_size.startswith("Large")
+        else load_spmid400()
+        if cap_size.startswith("Mid")
+        else load_spsmall600()
+    )
 
     # user determines max scan size
-    if max_scan >= len(universe):                 # full scan
+    if max_scan >= len(universe):  # full scan
         symbols = universe
-        st.sidebar.success(f"Scanning entire universe ({len(universe)} tickers). "
-                        "This gives objective top-20. Will take a bit longer than a sampled scan.")
-    else:                                         # sampled scan
+        st.sidebar.success(
+            f"Scanning entire universe ({len(universe)} tickers). "
+            "This gives objective top-20. Will take a bit longer than a sampled scan."
+        )
+    else:  # sampled scan
         symbols = random.sample(universe, max_scan)
-        st.sidebar.warning(f"Scanning a random sample of {max_scan} / {len(universe)} "
-                        "tickers (faster, may miss some extremes).")
+        st.sidebar.warning(
+            f"Scanning a random sample of {max_scan} / {len(universe)} "
+            "tickers (faster, may miss some extremes)."
+        )
 
-# ── FAST BULK DOWNLOAD (chunked) ───────────────────────────────────────────
+    # ── FAST BULK DOWNLOAD (chunked) ───────────────────────────────────────────
     chunk_size = 150
-    chunks     = [symbols[i:i + chunk_size]
-                for i in range(0, len(symbols), chunk_size)]
+    chunks = [symbols[i : i + chunk_size] for i in range(0, len(symbols), chunk_size)]
 
-    bar_ph   = st.progress(0, "⏳ downloading price history…")   # bar placeholder
-    text_ph  = st.empty()                                       # timer placeholder
+    bar_ph = st.progress(0, "⏳ downloading price history…")  # bar placeholder
+    text_ph = st.empty()  # timer placeholder
     start_ts = time.time()
 
     frames = []
@@ -78,7 +92,7 @@ if needs_refresh:
                 group_by="ticker",
                 threads=True,
                 progress=False,
-                auto_adjust=False
+                auto_adjust=False,
             )
         )
         elapsed = time.time() - start_ts
@@ -87,24 +101,25 @@ if needs_refresh:
 
     # clear widgets
     bar_ph.empty()
-    text_ph.empty()  
+    text_ph.empty()
 
-    # concatenate all frames into a single DataFrame                       
+    # concatenate all frames into a single DataFrame
     data = pd.concat(frames, axis=1)
 
     # compute tickert stats like change, RSI and average volume
     ticker_stats = get_ticker_stats(data=data, symbols=symbols, days=days)
+
     # convert to DataFrame
     df = pd.DataFrame(ticker_stats)
 
     # if the look back returns no tickers, we need to handle that
-    if df.empty:                                     
+    if df.empty:
         loading_msg.empty()
         st.warning("No tickers had enough history for that look-back window.")
-        st.session_state.losers  = pd.DataFrame()
+        st.session_state.losers = pd.DataFrame()
         st.session_state.gainers = pd.DataFrame()
-    else:                                            
-        st.session_state.losers  = df[df["Change"] < 0].nsmallest(20, "Change")
+    else:
+        st.session_state.losers = df[df["Change"] < 0].nsmallest(20, "Change")
         st.session_state.gainers = df[df["Change"] > 0].nlargest(20, "Change")
 
     st.session_state.prev_params = params
@@ -113,9 +128,10 @@ if needs_refresh:
 # ── DISPLAY ─────────────────────────────────────────────────────────────────
 if not st.session_state.losers.empty:
     view = st.selectbox("Show", ["Losers", "Gainers"])
-    data_subset = (st.session_state.losers if view == "Losers"
-              else st.session_state.gainers)
+    data_subset = (
+        st.session_state.losers if view == "Losers" else st.session_state.gainers
+    )
     st.header(f"{view} – {cap_size} – last {days} days")
-    render_company_blocks(df=data_subset,days=days)
+    render_company_blocks(df=data_subset, days=days)
 else:
     st.info("No data yet. Adjust sidebar and click run if needed.")
