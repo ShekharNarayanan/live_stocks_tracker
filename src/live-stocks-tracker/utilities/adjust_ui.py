@@ -1,8 +1,19 @@
 import streamlit as st
+import requests
+import numpy as np
+from bs4 import BeautifulSoup
 
 
 def _valid_logo(url):
-    return isinstance(url, str) and url.startswith("http")
+    """
+    Check if the given URL is valid and returns an image.
+    """
+    # check if response is valid and only then return the Logo
+    response = requests.get(url, timeout=3)
+    if response.status_code != 200:
+        return False    
+    else:
+        return url
 
 
 def render_company_blocks(df, days):
