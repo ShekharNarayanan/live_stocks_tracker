@@ -4,17 +4,6 @@ import numpy as np
 from bs4 import BeautifulSoup
 
 
-def _valid_logo(url):
-    """
-    Check if the given URL is valid and returns an image.
-    """
-    # check if response is valid and only then return the Logo
-    response = requests.get(url, timeout=3)
-    if response.status_code != 200:
-        return False    
-    else:
-        return url
-
 
 def render_company_blocks(df, days):
     """
@@ -34,18 +23,7 @@ def render_company_blocks(df, days):
 
     for idx, row in df.reset_index(drop=True).iterrows():
         with cols[idx % 4]:
-            # decide which HTML snippet to show in the corner
-            if _valid_logo(row.get("Logo")):
-                logo_html = (
-                    f'<img src="{row.Logo}" '
-                    'style="position:absolute; top:8px; right:8px; '
-                    'object-fit:contain;" />'
-                )
-            else:
-                logo_html = (
-                    '<span style="position:absolute; top:8px; right:8px; '
-                    'font-size:22px;">🛠</span>'
-                )
+            
 
             st.markdown(
                 f"""
@@ -55,7 +33,9 @@ def render_company_blocks(df, days):
     border-radius:6px;
     padding:5px 12px;
     margin-bottom:12px;">
-{logo_html}
+
+
+
 
 <h3 style="margin:0">{row.Symbol}</h3>
 <span style="font-size:25px;color:#aaaaaa;">{row.Sector if row.Sector != "-" else ""}</span><br>
