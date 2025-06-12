@@ -21,23 +21,22 @@ import requests
 #     return img_url
 
 
-def _rsi(series:pd.Series, n:int=14):
-    """
-    Calculate the Relative Strength Index (RSI) for a given series. Find more at 
-    https://www.investopedia.com/terms/r/rsi.asp
+def _rsi(series: pd.Series, n: int = 14) -> pd.Series:
+    delta = series.diff()
+    gain  = delta.clip(lower=0).rolling(n).mean() # compute avg of positive deltas
+    loss  = -delta.clip(upper=0).rolling(n).mean() # compute avg of negative deltas
 
-    Args:
-        series (pd.Series): closing‐price time series
-        n (int, optional): Number of periods. Defaults to 14.
+    # Compute RS (loss==0 → RS=inf → RSI becomes NaN)
+    rs  = gain / loss.replace(0, np.nan) # replace all the 0s in loss with NaN to avoid division by zero
+    rsi = 100 - 100 / (1 + rs)
 
-    Returns:
-        rs (float): Relative Strength Index value for the series
-    """
-    delta = series.diff() # take the difference between consecutive values
-    gain  = delta.clip(lower=0).rolling(n).mean() # ignore negative changes
-    loss  = -delta.clip(upper=0).rolling(n).mean() # ignore positive changes
-    rs    = gain / loss.replace(0, np.nan) # compute the relative strength (replace 0 in loss with Nan)
-    return 100 - 100 / (1 + rs)
+    # Build a mask for "pure up-moves" (gain > 0 but loss == 0)
+    pure_up = (gain > 0) & (loss == 0)
+
+    # Only there, set RSI to 100
+    rsi = rsi.mask(pure_up, 100)
+
+    return rsi
 
 def get_ticker_stats(data,symbols,days):  
     
