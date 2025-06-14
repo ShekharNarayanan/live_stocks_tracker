@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 import requests
+from typing import Dict, List
 
 # @st.cache_data(ttl=86400)
 # def _get_logo_url_from_symbol(symbol:str, size=100):
@@ -38,7 +39,16 @@ def _rsi(series: pd.Series, n: int = 14) -> pd.Series:
 
     return rsi
 
-def get_ticker_stats(data,symbols,days):  
+def _price_days_ago(prices: pd.Series, days_back: int) -> float:
+    """
+    Return the close from exactly `days_back` calendar days earlier.
+    If the market was shut on that date (weekend / holiday),
+    fall back to the most recent trading day before it.
+    """
+    latest_date  = prices.index[-1].normalize()          # keep only the date part
+    target_date  = latest_date - pd.Timedelta(days=days_back)
+    return prices.asof(target_date)                      # pandas handles the fallback
+def get_ticker_stats(data,symbols,days_back=30):  
     
     """
     Args:
@@ -71,17 +81,25 @@ def get_ticker_stats(data,symbols,days):
         # get closing prices and volumes for the symbol
         closes = data.get(sym, {}).get("Close") # closing prices at the end of each day
         vols   = data.get(sym, {}).get("Volume") # volume or number of shares traded each day
-        if closes is None or len(closes.dropna()) < days + 15:
+        
+        #skip if no data is available or not enough data for the look-back period
+        if closes is None or len(closes.dropna()) < days_back + 15:
             continue
-        closes, vols = closes.dropna(), vols.dropna()
-        ago, now = closes.shift(days).iloc[-1], closes.iloc[-1] # compute past and current closing price based on chosen number of days
-        pct      = (now / ago - 1) * 100
+        
+        # arrange in ascending order by date, drop NaNs
+        closes, vols = closes.dropna().sort_index(), vols.dropna().sort_index() # drop NaNs and sort by date
+
+        # compute vals
+        price_then = _price_days_ago(closes, days_back) 
+        price_now =  closes.iloc[-1] # compute past and current closing price based on chosen number of days
+        
+        pct      = (price_now / price_then - 1) * 100
         rsi_val  = _rsi(series=closes).iloc[-1]
         avg_vol  = vols.tail(30).mean() # fix avg volume to last 30 days
         sector   = "-" #TODO: find a way to fetch sector info
         ticker_metrics.append({
             "Symbol": sym, "Sector": sector,
-            "Change": pct, "Today": now, "Ago": ago,
+            "Change": pct, "Today": price_now, "Ago": price_then,
             "RSI": rsi_val, "AvgVol": avg_vol,
         })
 

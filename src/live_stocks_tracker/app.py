@@ -107,7 +107,7 @@ if needs_refresh:
     data = pd.concat(frames, axis=1)
 
     # compute tickert stats like change, RSI and average volume
-    ticker_stats = get_ticker_stats(data=data, symbols=symbols, days=days)
+    ticker_stats = get_ticker_stats(data=data, symbols=symbols, days_back=days)
 
     # convert to DataFrame
     df = pd.DataFrame(ticker_stats)
