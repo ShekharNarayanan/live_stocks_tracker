@@ -41,8 +41,17 @@ def _rsi(series: pd.Series, n: int = 14) -> pd.Series:
 def get_ticker_stats(data,symbols,days):  
     
     """
+    Args:
+        data (dict): a dictionary containing the stock data for each symbol.
+            The keys are symbols and the values are dictionaries with 'Close' and 'Volume' Series.
+        symbols (list of str): a list of stock symbols to calculate metrics for.
+        days (int): number of days to look back for price change and RSI calculation.
+
+    Returns:
+        ticker_metrics (list of dict): a list of dictionaries containing ticker metrics.
+
     For each symbol in `symbols`, calculate the price change over `days` and
-    append it to the list of dictionaries `recs`. Each dictionary has the
+    append it to the list of dictionaries `ticker_metrics`. Each dictionary has the
     following keys:
 
     - `Symbol`: the symbol
@@ -51,7 +60,7 @@ def get_ticker_stats(data,symbols,days):
     - `Today`: the price today
     - `Ago`: the price `days` ago
     - `RSI`: the RSI over `days`
-    - `AvgVol`: the average volume over the last 30 days
+    - `AvgVol`: the average volume (shares traded) over the last 30 days
 
     Returns:
         ticker_metrics (list containg dicts): a list of dictionaries with ticker metrics
@@ -60,16 +69,16 @@ def get_ticker_stats(data,symbols,days):
     for sym in symbols:
 
         # get closing prices and volumes for the symbol
-        closes = data.get(sym, {}).get("Close")
-        vols   = data.get(sym, {}).get("Volume")
+        closes = data.get(sym, {}).get("Close") # closing prices at the end of each day
+        vols   = data.get(sym, {}).get("Volume") # volume or number of shares traded each day
         if closes is None or len(closes.dropna()) < days + 15:
             continue
         closes, vols = closes.dropna(), vols.dropna()
-        ago, now = closes.shift(days).iloc[-1], closes.iloc[-1]
+        ago, now = closes.shift(days).iloc[-1], closes.iloc[-1] # compute past and current closing price based on chosen number of days
         pct      = (now / ago - 1) * 100
         rsi_val  = _rsi(series=closes).iloc[-1]
-        avg_vol  = vols.tail(30).mean()
-        sector   = "-"
+        avg_vol  = vols.tail(30).mean() # fix avg volume to last 30 days
+        sector   = "-" #TODO: find a way to fetch sector info
         ticker_metrics.append({
             "Symbol": sym, "Sector": sector,
             "Change": pct, "Today": now, "Ago": ago,
