@@ -25,17 +25,18 @@ st.write("")  # vertical space
 col1, col2 = st.columns([1, 3])
 with col1:
     if st.button("🚀 Open the generalized Scanner", use_container_width=True):
-        # <--- works on Streamlit ≥ 1.22
         st.switch_page("pages/Scanner.py")
+    if st.button("📊 Open the Portfolio Tracker", use_container_width=True):
+        st.switch_page("pages/Portfolio.py")
 
 with col2:
     st.info(
         """
-        **What does this include?**
+        **What do the different options mean?**
 
-        * + 🌐 We pull daily prices for the S&P 500/400/600 via *yfinance*  
-        * + 📊 Compute %-change, RSI-14, and average volume  
-        * + 📈 Display top-20 gainers and losers in each cap-size category
+        * 🌐 We pull daily prices for the S&P 500/400/600 via *yfinance*  
+        * 📊 Compute %-change, RSI-14, and average volume  
+        * 📈 Display top-20 gainers and losers in each cap-size category
         """,
         icon="ℹ️",
     )
