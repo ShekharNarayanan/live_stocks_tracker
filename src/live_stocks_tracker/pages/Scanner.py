@@ -1,10 +1,9 @@
-# app.py  ── Top-20 losers & gainers with cap-size
+# Scanner.py - a simple stock scanner for top-20 gainers and losers
 import streamlit as st
 import pandas as pd
 import requests, io, yfinance as yf, numpy as np, random
-from datetime import datetime
 from american import load_sp500, load_spmid400, load_spsmall600
-from utilities.ticker_info import get_ticker_stats
+from utilities.ticker_info import get_ticker_stats, download_ticker_data
 from utilities.adjust_ui import render_company_blocks
 import time
 
@@ -75,33 +74,7 @@ if needs_refresh:
         )
 
     # ── FAST BULK DOWNLOAD (chunked) ───────────────────────────────────────────
-    chunk_size = 150
-    chunks = [symbols[i : i + chunk_size] for i in range(0, len(symbols), chunk_size)]
-
-    bar_ph = st.progress(0, "⏳ downloading price history…")  # bar placeholder
-    text_ph = st.empty()  # timer placeholder
-    start_ts = time.time()
-
-    frames = []
-    for n, chunk in enumerate(chunks, start=1):
-        frames.append(
-            yf.download(
-                chunk,
-                period="1y",
-                interval="1d",
-                group_by="ticker",
-                threads=True,
-                progress=False,
-                auto_adjust=False,
-            )
-        )
-        elapsed = time.time() - start_ts
-        bar_ph.progress(n / len(chunks))
-        text_ph.text(f"⏳ downloading price history… {elapsed:0.1f}s")
-
-    # clear widgets
-    bar_ph.empty()
-    text_ph.empty()
+    frames = download_ticker_data(symbols=symbols)
 
     # concatenate all frames into a single DataFrame
     data = pd.concat(frames, axis=1)

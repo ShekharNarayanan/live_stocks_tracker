@@ -3,6 +3,8 @@ import pandas as pd
 import streamlit as st
 import requests
 from typing import Dict, List
+import time
+import yfinance as yf
 
 # @st.cache_data(ttl=86400)
 # def _get_logo_url_from_symbol(symbol:str, size=100):
@@ -48,6 +50,46 @@ def _price_days_ago(prices: pd.Series, days_back: int) -> float:
     latest_date  = prices.index[-1].normalize()          # keep only the date part
     target_date  = latest_date - pd.Timedelta(days=days_back)
     return prices.asof(target_date)                      # pandas handles the fallback
+
+def download_ticker_data(symbols: List[str], chunk_size: int = 150, period: str = "1y", interval: str = "1d") -> Dict[str, pd.DataFrame]:
+    """
+    Download historical stock data for a list of symbols using yfinance.
+
+    Args:
+        symbols (List[str]): List of stock symbols to download data for.
+        chunk_size (int): Number of symbols to download in each chunk.
+        period (str): Period for which to download data, e.g. "1y" for 1 year.
+        interval (str): Data interval, e.g. "1d" for daily data.
+    Returns:
+        Dict[str, pd.DataFrame]: Dictionary where keys are symbols and values are DataFrames with 'Close' and 'Volume' Series.
+    """
+    
+    chunks = [symbols[i : i + chunk_size] for i in range(0, len(symbols), chunk_size)]
+    bar_ph = st.progress(0, "⏳ downloading price history…")  # bar placeholder
+    text_ph = st.empty()  # timer placeholder
+    start_ts = time.time()
+
+    frames = []
+    for n, chunk in enumerate(chunks, start=1):
+        frames.append(
+            yf.download(
+                chunk,
+                period=period,
+                interval=interval,
+                group_by="ticker",
+                threads=True,
+                progress=False,
+                auto_adjust=False,
+            )
+        )
+        elapsed = time.time() - start_ts
+        bar_ph.progress(n / len(chunks))
+        text_ph.text(f"⏳ downloading price history… {elapsed:0.1f}s")
+
+    # clear widgets
+    bar_ph.empty()
+    text_ph.empty()
+    return frames
 def get_ticker_stats(data,symbols,days_back=30):  
     
     """
