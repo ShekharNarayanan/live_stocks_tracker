@@ -6,7 +6,7 @@ REM 2) activate conda
 call conda activate live-tracker
 
 REM 3) run the streamlit app
-call streamlit run live_stocks_tracker\app.py
+call streamlit run live_stocks_tracker\Home.py
 pause
 
 
