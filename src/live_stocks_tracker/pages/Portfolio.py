@@ -31,20 +31,20 @@ loading_msg = st.empty()
 # ── LOAD UNIVERSE DATA  ─────────────────────────────────────────
 if not fetch_btn:
     st.write("Please click the 'Fetch Data' button to load the universe data.")
+    st.stop()
 
-else:
-    loading_msg.info("🔄 Fetching data… please wait.")
-    # Fetch data using yfinance based on universe
-    universe = (
-        load_sp500()
-        if cap_size.startswith("Large")
-        else load_spmid400()
-        if cap_size.startswith("Mid")
-        else load_spsmall600()
-    )
-        
-    symbols = universe # select all symbols
 
+# Fetch data using yfinance based on universe
+loading_msg.info("🔄 Fetching data… please wait.")
+universe = (
+    load_sp500()
+    if cap_size.startswith("Large")
+    else load_spmid400()
+    if cap_size.startswith("Mid")
+    else load_spsmall600()
+)
+    
+symbols = universe # select all symbols
 
 # concatenate all frames into a single DataFrame
 frames = download_ticker_data(symbols=symbols) 
