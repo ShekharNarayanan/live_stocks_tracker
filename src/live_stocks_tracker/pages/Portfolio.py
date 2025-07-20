@@ -22,23 +22,36 @@ cap_size = st.radio(
     horizontal=True,
 )
 loading_msg = st.empty()
-# ── SET UP BUTTONS  ──────────────────────────────────────────────────────────────────
-def add_ticker():
-    st.button("Add Ticker")
-    return True
 
+# ── INITIALIZE SESSION STATE VARIABLES ────────────────────────────────────────────────────────────────
+# we need to track if the data has been loaded, 
+# whether the entered tickers are being stored in a watch list, and
+# the ticker inputs being entered by the user
 
+# def clear_textbox():
+#     # Runs before Streamlit returns to your main code,
+#     # so it’s legal to touch the key here.
+#     st.session_state["ticker_input"] = ""
+
+session_essentials = {
+    "data_loaded": False,
+    "watch_list": [],
+    "ticker_input": "",
+    "universe_tickers": [],
+    }
+
+for key,value in session_essentials.items():
+    if key not in st.session_state:
+        st.session_state[key] = value
+
+    
+# ── FETCH DATA AND SEARCH BAR LOGIC ────────────────────────────────────────────────────────────────
 fetch_btn = st.button("Fetch Data")
 
-
-
-if not fetch_btn:
-    loading_msg.info("Please click the 'Fetch Data' button to load the universe data.")
-    st.stop()
-else:
+if fetch_btn and not st.session_state.data_loaded:
     loading_msg.info("🔄 Fetching data… please wait.")
+    st.session_state.data_loaded = True
     # load universe
-    # Fetch data using yfinance based on universe
     universe = (
         load_sp500()
         if cap_size.startswith("Large")
@@ -46,72 +59,31 @@ else:
         if cap_size.startswith("Mid")
         else load_spsmall600()
     )
-        
-    symbols = universe # select all symbols
+    # download dataframes of all tickers in the chosen universe
+    frames = download_ticker_data(symbols=universe)
 
-    frames = download_ticker_data(symbols=symbols) 
-    # concatenate all frames into a single DataFrame
+    # concatenate all dataframes into one
     data = pd.concat(frames, axis=1)
-    loading_msg.empty()
-    time.sleep(2)  # pause to let the user see the message
-    x = add_ticker()
 
-    if x:
-        if 'ss_text' and "result_list" not in st.session_state:
-            st.session_state.ss_text = "ON RENDER"
-            st.session_state.result_list = []
+    # add ticker data to session state
+    st.session_state.universe_tickers = universe
 
-                
-        def _set_ss_text():
-            st.session_state.ss_text = st.session_state.key_ss_text
-
-
-        st.session_state.ss_text = st.text_input(
-                label="Persistent text_input",
-                value=st.session_state.ss_text,
-                on_change=_set_ss_text,
-                key='key_ss_text'
-        )
-        st.session_state.result_list.append(st.session_state.ss_text)
-
-        st.write(f"Current ticker array: `{st.session_state.result_list}`")
+    # compute tickert stats like change, RSI and average volume (default of 30 days)
+    # ticker_stats = get_ticker_stats(data=data, symbols=universe)
+if st.session_state.data_loaded:
+    search_input = st.text_input("Enter ticker symbol",
+                                 placeholder="e.g. AAPL, MSFT, TSLA",
+                                 key="ticker_input",
+                                 ).strip().upper()
+    if search_input:
+        if search_input not in st.session_state.universe_tickers:
+            st.warning(f"Ticker {search_input} not found in universe.")
+        elif search_input in st.session_state.watch_list:
+            st.warning(f"Ticker {search_input} already in watch list.")
+        else:
+            st.session_state.watch_list.append(search_input)
+            st.success(f"Ticker {search_input} added to watch list.")
         
 
-    
-
-
-# ── LOAD UNIVERSE DATA  ─────────────────────────────────────────
-
-
-# # ── SEARCH BAR FOR FINDING TICKERS ─────────────────────────────────────────
-
-# # check if something can persist
-# if 'ss_text' and "result_list" not in st.session_state:
-#     st.session_state.ss_text = "ON RENDER"
-#     st.session_state.result_list = []
-
-        
-# def _set_ss_text():
-#     st.session_state.ss_text = st.session_state.key_ss_text
-
-
-# st.session_state.ss_text = st.text_input(
-#         label="Persistent text_input",
-#         value=st.session_state.ss_text,
-#         on_change=_set_ss_text,
-#         key='key_ss_text'
-# )
-# st.session_state.result_list.append(st.session_state.ss_text)
-
-# st.write(f"Current ticker array: `{st.session_state.result_list}`")
-
-# st.session_state.first_search = False
-
-    
-    
-
-
-
-
-
-
+else:
+    loading_msg.info("Please click 'Fetch Data' to load the data.")
