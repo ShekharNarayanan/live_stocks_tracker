@@ -77,23 +77,23 @@ if needs_refresh:
     frames = download_ticker_data(symbols=symbols)
 
     # concatenate all frames into a single DataFrame
-    data = pd.concat(frames, axis=1)
+    all_ticker_data = pd.concat(frames, axis=1)
 
     # compute tickert stats like change, RSI and average volume
-    ticker_stats = get_ticker_stats(data=data, symbols=symbols, days_back=days)
+    ticker_stats = get_ticker_stats(data=all_ticker_data, symbols=symbols, days_back=days)
 
     # convert to DataFrame
-    df = pd.DataFrame(ticker_stats)
+    ticker_stats_df = pd.DataFrame(ticker_stats)
 
     # if the look back returns no tickers, we need to handle that
-    if df.empty:
+    if ticker_stats_df.empty:
         loading_msg.empty()
         st.warning("No tickers had enough history for that look-back window.")
         st.session_state.losers = pd.DataFrame()
         st.session_state.gainers = pd.DataFrame()
     else:
-        st.session_state.losers = df[df["Change"] < 0].nsmallest(20, "Change")
-        st.session_state.gainers = df[df["Change"] > 0].nlargest(20, "Change")
+        st.session_state.losers = ticker_stats_df[ticker_stats_df["Change"] < 0].nsmallest(20, "Change")
+        st.session_state.gainers = ticker_stats_df[ticker_stats_df["Change"] > 0].nlargest(20, "Change")
 
     st.session_state.prev_params = params
     loading_msg.empty()
@@ -104,7 +104,9 @@ if not st.session_state.losers.empty:
     data_subset = (
         st.session_state.losers if view == "Losers" else st.session_state.gainers
     )
+    print(ticker_stats_df)
+    print(data_subset)
     st.header(f"{view} – {cap_size} – last {days} days")
-    render_company_blocks(df=data_subset, days=days)
+    render_company_blocks(ticker_stats_df=data_subset, days=days)
 else:
     st.info("No data yet. Adjust sidebar and click run if needed.")

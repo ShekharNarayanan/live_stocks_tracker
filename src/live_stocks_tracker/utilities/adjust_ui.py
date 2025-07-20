@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup
 
 
 
-def render_company_blocks(df, days):
+def render_company_blocks(ticker_stats_df, days=30):
     """
     Render a Streamlit block for each row in the given DataFrame.
 
@@ -21,7 +21,7 @@ def render_company_blocks(df, days):
     """
     cols = st.columns(4)
 
-    for idx, row in df.reset_index(drop=True).iterrows():
+    for idx, row in ticker_stats_df.reset_index(drop=True).iterrows():
         with cols[idx % 4]:
             
 
