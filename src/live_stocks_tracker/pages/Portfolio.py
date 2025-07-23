@@ -5,9 +5,22 @@ from american import load_sp500, load_spmid400, load_spsmall600
 from utilities.ticker_info import get_ticker_stats, download_ticker_data
 from utilities.adjust_ui import render_company_blocks
 import time
+import streamlit as st
+import streamlit as st
+import utilities.auth_utils as auth
 
-# TODO: 1) Activate fetch data button the moment user changes the cap size universe
-# 2) Display watchlist tickers with existing functions
+
+# ── AUTHORIZATION ────────────────────────────────────────────────────────────────
+user = auth.get_user_info() # check if user wants to log in
+
+if user is None:
+    st.title("🛂 Sign in")
+    auth.login_button()
+    st.stop()
+
+st.sidebar.button("Log out", on_click=auth.logout)
+st.success(f"Welcome, {user['email']}")
+
 
 # ── SETTINGS ────────────────────────────────────────────────────────────────
 st.set_page_config(layout="wide", page_icon="📉📈")
@@ -33,10 +46,6 @@ loading_msg = st.empty()
 # whether the entered tickers are being stored in a watch list, and
 # the ticker inputs being entered by the user
 
-# def clear_textbox():
-#     # Runs before Streamlit returns to your main code,
-#     # so it’s legal to touch the key here.
-#     st.session_state["ticker_input"] = ""
 
 session_essentials = {
     "data_loaded": False,
@@ -109,6 +118,7 @@ if st.session_state.data_loaded:
     )
     search_inputs = search_inputs.split(",") 
     added_tickers = pd.DataFrame()
+    
     for search_input in search_inputs:
         search_input = search_input.strip().upper()
 
