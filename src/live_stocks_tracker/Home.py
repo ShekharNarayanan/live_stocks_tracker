@@ -1,5 +1,6 @@
 # Home.py  -- the new entry point
 import streamlit as st
+from utilities.animations import add_half_screen_stock_glow
 
 st.set_page_config(
     page_title="Live-Stocks-Tracker",
@@ -50,3 +51,4 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
+add_half_screen_stock_glow() 
