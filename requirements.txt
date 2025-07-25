@@ -165,7 +165,6 @@ streamlit-oauth==0.1.14
 stringcase==1.2.0
 sympy==1.14.0
 tenacity==9.0.0
-textwash==0.1.0
 threadpoolctl==3.5.0
 tokenizers==0.21.2
 toml==0.10.2
