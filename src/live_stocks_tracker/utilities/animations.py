@@ -148,7 +148,7 @@ def add_half_screen_stock_glow():
       /* Half-screen neon-glow chart anchored at bottom */
       #bgCanvas {
         position: fixed;
-        bottom: 0; left: 0;
+        bottom: -18; left: 0;
         width: 100vw;
         height: 100vh;          /* half the viewport height             */
         z-index: -1;           /* behind all Streamlit elements         */
