@@ -70,4 +70,3 @@ def logout():
             _oauth2().revoke_token(tok)
         except Exception:
             pass
-    st.rerun()
