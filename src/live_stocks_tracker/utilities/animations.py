@@ -179,48 +179,49 @@ def add_half_screen_stock_glow():
       const points     = [];
 
       for (let i = 0; i < POINTS; i++) {
-          y = y - drift + (Math.random() - 0.5) * volatility;
-          y = Math.max(topLimit, Math.min(canvas.height, y));
-          const x = (i / (POINTS - 1)) * canvas.width;
-          points.push([x, y]);
+        y = y - drift + (Math.random() - 0.5) * volatility;
+        y = Math.max(topLimit, Math.min(canvas.height, y));
+        const x = (i / (POINTS - 1)) * canvas.width;
+        points.push([x, y]);
       }
 
       /* ------- Animation loop ----------------------------------------- */
-      const FPS        = 20;
+      const FPS        = 80;
       const FRAME_TIME = 1000 / FPS;
       const speedPx    = 2;
       let offset       = 0;
       let lastTime     = 0;
 
       function draw(now){
-        if (now - lastTime < FRAME_TIME){
-          requestAnimationFrame(draw); return;
-        }
-        lastTime = now;
+      if (now - lastTime < FRAME_TIME){
+        requestAnimationFrame(draw); return;
+      }
+      lastTime = now;
 
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.save();
-        ctx.translate(-offset, 0);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.save();
+      ctx.translate(-offset, 0);
 
-        /* Glow pass */
-        ctx.beginPath();
-        ctx.shadowColor = "rgba(0,255,255,0.95)";
-        ctx.shadowBlur  = 60;
-        ctx.lineWidth   = 2;
-        ctx.strokeStyle = "#00FFFF";
-        points.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y));
-        ctx.stroke();
+      /* Glow pass */
+      ctx.beginPath();
+      ctx.shadowColor = "rgba(0,255,0,0.95)";   // neon green glow
+      ctx.shadowBlur  = 60;
+      ctx.lineWidth   = 2;
+      ctx.strokeStyle = "#39FF14";              // neon green line
+      points.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y));
+      ctx.stroke();
 
-        /* Crisp centre line */
-        ctx.shadowBlur = 0;
-        ctx.lineWidth  = 2;
-        ctx.stroke();
+      /* Crisp centre line */
+      ctx.shadowBlur = 0;
+      ctx.lineWidth  = 2;
+      ctx.strokeStyle = "#39FF14";              // neon green line
+      ctx.stroke();
 
-        ctx.restore();
+      ctx.restore();
 
-        offset += speedPx;
-        if (offset > canvas.width) offset = 0;
-        requestAnimationFrame(draw);
+      offset += speedPx;
+      if (offset > canvas.width) offset = 0;
+      requestAnimationFrame(draw);
       }
       requestAnimationFrame(draw);
     })();
@@ -228,4 +229,4 @@ def add_half_screen_stock_glow():
     """
 
     # height=0 keeps layout flow compact; CSS + _expand_iframe handles sizing
-    components.html(html, height=600, width=0)
+    components.html(html, height=150, width=0)
