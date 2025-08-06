@@ -13,13 +13,27 @@ import utilities.auth_utils as auth
 # ── AUTHORIZATION ────────────────────────────────────────────────────────────────
 user = auth.get_user_info() # check if user wants to log in
 
-if user is None:
-    st.title("🛂 Sign in")
+# add part where user can continue without logging in too
+if "no_login" not in st.session_state:
+    st.session_state.no_login = False
+
+def no_login():
+    st.session_state.no_login = True
+
+if user is None and not st.session_state.no_login:
+    # st.title("🛂 Sign in")
+    st.button("Continue without logging in", on_click=lambda: no_login())
     auth.login_button()
+
+if user is not None:
+    st.sidebar.button("Log out", on_click=auth.logout)
+    st.success(f"Welcome, {user['email']}")
+elif st.session_state.no_login:
+    st.success("Welcome, anonymous user!\n Feel free to continue browsing")
+else:
+    st.warning("Please log in or continue as an anonymous user.")
     st.stop()
 
-st.sidebar.button("Log out", on_click=auth.logout)
-st.success(f"Welcome, {user['email']}")
 
 
 # ── SETTINGS ────────────────────────────────────────────────────────────────
