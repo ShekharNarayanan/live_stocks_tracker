@@ -4,10 +4,11 @@ import requests, io, yfinance as yf, numpy as np, random
 from american import load_sp500, load_spmid400, load_spsmall600
 from utilities.ticker_info import get_ticker_stats, download_ticker_data
 from utilities.adjust_ui import render_company_blocks
-import time
+import sqlite3
 import streamlit as st
 import streamlit as st
 import utilities.auth_utils as auth
+from utilities.db_utils import DB_PATH, insert_portfolios_row
 
 
 # ── AUTHORIZATION ────────────────────────────────────────────────────────────────
@@ -26,6 +27,7 @@ if user is None and not st.session_state.no_login:
     auth.login_button()
 
 if user is not None:
+    st.session_state.user_email = user["email"]  
     st.sidebar.button("Log out", on_click=auth.logout)
     st.success(f"Welcome, {user['email']}")
 elif st.session_state.no_login:
@@ -68,6 +70,7 @@ session_essentials = {
     "universe_tickers": [],
     "current_cap_size": "",  # to track the chosen cap size
     "all_ticker_data": pd.DataFrame(),  # to store all ticker data
+    "saved": False
 }
 
 for key, value in session_essentials.items():
@@ -107,11 +110,7 @@ if fetch_btn and not st.session_state.data_loaded:
 
     # convert to DataFrame
     ticker_stats_df = pd.DataFrame(ticker_stats)
-    # for sym in ticker_stats_df["Symbol"]:
-    #     if sym == "AAPL":
-    #         print("yess")
-    #         render_company_blocks(ticker_stats_df=ticker_stats_df[ticker_stats_df["Symbol"] == sym])
-    #         break
+
 
     st.session_state.all_ticker_data = ticker_stats_df
 
@@ -120,8 +119,10 @@ if fetch_btn and not st.session_state.data_loaded:
 
 if st.session_state.current_cap_size != cap_size:
     st.session_state.data_loaded = False
+    st.session_state.saved = False
 
 if st.session_state.data_loaded:
+    
     search_inputs = (
         st.text_input(
             "Enter comma seperated ticker symbol",
@@ -142,6 +143,7 @@ if st.session_state.data_loaded:
             elif search_input in st.session_state.watch_list:
                 st.warning(f"Ticker {search_input} already in watch list.")
             else:
+                #TODO: add ticker to sql database
                 st.session_state.watch_list.append(search_input)
                 test_df = st.session_state.all_ticker_data 
                 test_df = test_df[test_df["Symbol"] == search_input] 
@@ -150,6 +152,20 @@ if st.session_state.data_loaded:
                 st.toast(f"Ticker {search_input} added to watch list.")
     
     render_company_blocks(ticker_stats_df=added_tickers)
+    # add everything to sql database
+
+    for ticker in st.session_state.watch_list:
+        with sqlite3.connect(DB_PATH) as conn:
+            if insert_portfolios_row(
+            conn,
+            st.session_state.user_email,
+            st.session_state.current_cap_size,
+            ticker
+            ):
+                st.success("Portfolio row saved!")
+            else:
+                st.info("That stock is already in your portfolio.")
+            
 
 else:
     loading_msg.info("Please click 'Fetch Data' to load the data.")
