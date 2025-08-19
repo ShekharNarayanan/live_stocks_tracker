@@ -28,8 +28,10 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          if [ -f environment.yml ]; then
+            conda env create -f environment.yml || conda env update -f environment.yml
+            conda activate $(head -1 environment.yml | cut -d' ' -f2)  # assumes 'name: myenv' is first line
+          fi
 
       - name: Install pytest
         run: pip install pytest
