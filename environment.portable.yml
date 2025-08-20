@@ -2,7 +2,6 @@ name: live_stocks_tracker
 channels:
   - conda-forge
   - defaults
-channel_priority: strict
 dependencies:
   - python>=3.11,<3.13
   - pip
