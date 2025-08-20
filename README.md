@@ -37,13 +37,8 @@ cd live-stocks-tracker
 ### 2. Install dependencies  
 Create and activate a virtual environment, then install:
 ```bash
-python -m venv .venv
-# macOS / Linux
-source .venv/bin/activate
-# Windows
-.venv\Scripts\activate
+conda env create --file environment.portable.yml
 
-pip install -r requirements.txt
 ```
 
 ### 3. Run the app  
@@ -85,3 +80,4 @@ This opens a browser tab at `http://localhost:8501`.
 ## 📝 License
 
 Distributed under the MIT License. See [LICENSE](LICENSE) for details.
+
