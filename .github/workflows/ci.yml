@@ -2,39 +2,54 @@ name: CI Pipeline
 
 on:
   push:
-    branches:
-      - main
-
+    branches: [ main ]
   pull_request:
-    branches:
-      - main
+    branches: [ main ]
+
+defaults:
+  run:
+    shell: bash -l {0}  # needed so `conda activate` works
 
 jobs:
   test:
     runs-on: ubuntu-latest
-
     strategy:
+      fail-fast: false
       matrix:
         python-version: ["3.11", "3.12"]
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+      # Install Miniconda (no mamba) and create/activate env from your YAML
+      - name: Set up Miniconda and create env
+        uses: conda-incubator/setup-miniconda@v3
         with:
+          auto-update-conda: false
+          auto-activate-base: false
+          use-mamba: false
+          environment-file: environment.portable.yml
           python-version: ${{ matrix.python-version }}
+          channels: conda-forge
+          channel-priority: strict
 
-      - name: Install dependencies
+      - name: Show environment info
         run: |
-          if [ -f environment.yml ]; then
-            conda env create -f environment.yml || conda env update -f environment.yml
-            conda activate $(head -1 environment.yml | cut -d' ' -f2)  # assumes 'name: myenv' is first line
-          fi
+          conda info
+          conda list
+          python -V
 
-      - name: Install pytest
-        run: pip install pytest
+      # If pytest isn’t in your env, ensure it
+      - name: Ensure pytest
+        run: |
+          python - <<'PY'
+          try:
+              import pytest  # noqa
+          except Exception:
+              import subprocess
+              subprocess.check_call(["conda", "install", "-y", "-c", "conda-forge", "pytest"])
+          PY
 
       - name: Run tests
         run: pytest --maxfail=1 --disable-warnings -q
