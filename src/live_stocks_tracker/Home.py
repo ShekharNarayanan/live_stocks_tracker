@@ -43,7 +43,7 @@ with col1:
 
 with col2:
     if st.button("📊 Open the Portfolio Tracker", use_container_width=False):
-        st.switch_page("pages/Portfolio.py")
+        st.switch_page("pages/Make_Your_Portfolio.py")
     st.info(
     """
     **Watchlist** \n
