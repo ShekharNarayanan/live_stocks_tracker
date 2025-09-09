@@ -1,14 +1,12 @@
 import streamlit as st
 import pandas as pd
-import requests
-import yfinance as yf
 from american import load_sp500, load_spmid400, load_spsmall600
 from utilities.ticker_info import get_ticker_stats, download_ticker_data
 from utilities.adjust_ui import render_company_blocks
 import sqlite3
 import utilities.auth_utils as auth
 from pathlib import Path
-from utilities.db_utils import  insert_portfolios_row, fetch_portfolio_from_db
+from utilities.db_utils import  insert_portfolios_row
 
 # ── FUNCTIONS NEEDED ────────────────────────────────────────────────────────────────
 
@@ -42,10 +40,9 @@ if user is not None:
     st.session_state.user_email = user["email"]  
     st.sidebar.button("Log out", on_click=auth.logout)
     st.success(f"Welcome, {user['email']}")
-elif st.session_state.user_logged_in:
-    st.success("Welcome, anonymous user!\n Feel free to continue browsing")
+elif st.session_state.use_without_log_in:
+    st.success("Welcome, anonymous user!\n Feel free to continue browsing. Refresh the page if you decide to sign up 😃")
 else: # stop streamlit until user picks between logging in or continuing anonymously
-    st.warning("Please log in or continue as an anonymous user.")
     st.stop()
 
 #  ── NAIVGATE TO PERSONAL PORTFOLIO IF LOGGED IN ────────────────────────────────────────────────────────────────
@@ -114,8 +111,6 @@ if fetch_btn and not st.session_state.data_loaded:
 
     # download dataframes of all tickers in the chosen universe
     frames = download_ticker_data(symbols=universe)
-
-    # concatenate all frames into a single DataFrame
     all_ticker_data = pd.concat(frames, axis=1)
 
     # compute tickert stats like change, RSI and average volume
@@ -123,7 +118,7 @@ if fetch_btn and not st.session_state.data_loaded:
 
     # convert to DataFrame
     ticker_stats_df = pd.DataFrame(ticker_stats)
-
+    
     # save all ticker stats as a session state variable
     st.session_state.all_ticker_data = ticker_stats_df
 
@@ -136,7 +131,7 @@ if st.session_state.current_cap_size != cap_size:
 
 
 # ── SEARCH BAR AND DATA BASE PERSISTING ────────────────────────────────────────────────────────────────
-if st.session_state.data_loaded: # > for an
+if st.session_state.data_loaded: # > if data is loaded show example tickers and search bar
     example_list = st.session_state.universe_tickers
     search_inputs = (
         st.text_input(
