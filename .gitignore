@@ -1,4 +1,5 @@
 src/.streamlit
+src/live_stocks_tracker/.streamlit/
 __pycache__/
 bleh.py
 conda-lock.yml
