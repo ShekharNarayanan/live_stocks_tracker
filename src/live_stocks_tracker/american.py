@@ -2,6 +2,7 @@
 import pandas as pd
 import streamlit as st
 import requests
+from io import StringIO
 
 # ----------------------------------------------------------------------
 # Utilities
@@ -37,7 +38,7 @@ def _scrape_table(url: str, symbol_col: str = "Symbol") -> list[str]:
     }
     r = requests.get(url, headers=headers, timeout=20)
     r.raise_for_status()
-    dfs = pd.read_html(r.text)
+    dfs = pd.read_html(StringIO(r.text))
     if not dfs:
         raise ValueError(f"No HTML tables found at {url}")
     df = dfs[0]
