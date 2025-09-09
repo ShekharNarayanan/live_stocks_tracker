@@ -22,7 +22,7 @@ def _save_token(tok: dict):
     st.session_state.token = tok
 
 # --- public API -------------------------------------------------------------
-def login_button(label_sign_in: str = "Continue with Google"):
+def login_button(label_sign_in: str = "Continue with gmail 📧"):
     """
     Renders a Google-sign-in button.
     • If the user authorizes, the access token is cached in st.session_state.
