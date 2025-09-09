@@ -31,8 +31,8 @@ def render_company_blocks(ticker_stats_df, days=30):
     position:relative;
     border:6px solid #004080;
     border-radius:6px;
-    padding:5px 12px;
-    margin-bottom:12px;">
+    padding:3px 9px;
+    margin-bottom:9px;">
 
 
 
