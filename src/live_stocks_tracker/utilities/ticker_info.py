@@ -80,6 +80,7 @@ def download_ticker_data(symbols: List[str], chunk_size: int = 150, period: str 
                 threads=True,
                 progress=False,
                 auto_adjust=False,
+                timeout = 3
             )
         )
         elapsed = time.time() - start_ts
@@ -90,6 +91,7 @@ def download_ticker_data(symbols: List[str], chunk_size: int = 150, period: str 
     bar_ph.empty()
     text_ph.empty()
     return frames
+
 def get_ticker_stats(data,symbols,days_back=30):  
     
     """
@@ -146,3 +148,6 @@ def get_ticker_stats(data,symbols,days_back=30):
         })
 
     return ticker_metrics
+
+def get_line_chart_for_ticker(look_back:int=30):
+    pass
