@@ -56,9 +56,9 @@ This opens a browser tab at `http://localhost:8501`.
 
 **Note**: To use the portfolio feature before the web-app is deployed, you will need to follow the steps below:
 
-1. Create a .streamlit folder inside the `src` folder and place the `dummy_secrets.toml` there.
-2. Fill in your own credentials and rename the file to `secrets.toml`. Make sure you add this file to the .gitignore folder.
-3. You will need a starting portfolio.db to get started. To make one, we need to explicitly run the `db_utils.py` script and it will generate a `portfolios.db` for you. 
+1. Create a `.streamlit` folder inside the `src` folder and place the `dummy_secrets.toml` there.
+2. Fill in your own credentials and rename the file to `secrets.toml`. Make sure you add the ".streamlit" folder to the `.gitignore` file.
+3. You will need an empty portfolio.db to get started. To make one, you need to explicitly run the `db_utils.py` script and it will generate a `portfolios.db` for you. 
 
 First, navigate to the project folder and activate the environment.
 ```bash
