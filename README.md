@@ -31,7 +31,7 @@ A simple Streamlit web-app to scan US large-, mid- and small-cap universes for t
 ### 1. Clone this repo  
 ```bash
 git clone https://github.com/ShekharNarayanan/live-stocks-tracker.git
-cd live-stocks-tracker/src/live_stocks_tracker
+cd live-stocks-tracker/
 ```
 
 ### 2. Install dependencies  
@@ -43,7 +43,7 @@ conda env create --file environment.portable.yml
 
 ### 3. Run the app  
 ```bash
-streamlit Home.py
+streamlit run src/live_stocks_tracker/Home.py
 ```
 This opens a browser tab at `http://localhost:8501`.
 
@@ -80,6 +80,7 @@ This opens a browser tab at `http://localhost:8501`.
 ## 📝 License
 
 Distributed under the MIT License. See [LICENSE](LICENSE) for details.
+
 
 
 
