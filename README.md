@@ -54,6 +54,25 @@ This opens a browser tab at `http://localhost:8501`.
 - Wikipedia is scraped for ticker lists and use **yfinance** for price data.  
 - No external API key needed—just install the packages.
 
+**Note**: To use the portfolio feature before the web-app is deployed, you will need to follow the steps below:
+
+1. Create a .streamlit folder inside the `src` folder and place the `dummy_secrets.toml` there.
+2. Fill in your own credentials and rename the file to `secrets.toml`. Make sure you add this file to the .gitignore folder.
+3. You will need a starting portfolio.db to get started. To make one, we need to explicitly run the `db_utils.py` script and it will generate a `portfolios.db` for you. 
+
+First, navigate to the project folder and activate the environment.
+```bash
+cd live_stocks_tracker
+conda activate live_stocks_tracker
+```
+
+After you activate your environment, you can run the code line below to generate the portfolios.db.
+
+```bash
+python -m src\live_stocks_tracker\utilities\db_utils
+```
+
+
 ---
 
 ---
