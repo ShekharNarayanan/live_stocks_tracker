@@ -7,9 +7,15 @@ import sqlite3
 import utilities.auth_utils as auth
 from pathlib import Path
 from utilities.db_utils import  insert_portfolios_row
+import os
+from pathlib import Path
 
-# ── FUNCTIONS NEEDED ────────────────────────────────────────────────────────────────
-
+# ── check for .secrets folder ────────────────────────────────────────────────────────────────
+src_root = Path(__file__).parents[2]
+secrets_path = src_root / ".streamlit" / "secrets.toml"
+if not os.path.exists(secrets_path):
+    st.info("No secrets.toml file found. Please refer to the README to set up the .streamlit/secrets.toml file with your Google OAuth credentials.")
+    st.stop()
 # ── SETTINGS ────────────────────────────────────────────────────────────────
 st.set_page_config(layout="wide", page_icon="📉📈")
 st.title("🏪 Make Your Own Portfolio")
