@@ -2,13 +2,13 @@
 import streamlit as st
 from utilities.animations import add_half_screen_stock_glow
 
-add_half_screen_stock_glow() 
-
 st.set_page_config(
     page_title="Live-Stocks-Tracker",
     page_icon="💹",
     layout="wide",
 )
+add_half_screen_stock_glow() 
+
 
 # -----------------------------------------------------------------------------
 # Simple hero section
