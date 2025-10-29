@@ -11,7 +11,7 @@ import os
 from pathlib import Path
 
 # ── check for .secrets folder ────────────────────────────────────────────────────────────────
-src_root = Path(__file__).parents[2]
+src_root = Path(__file__).parents[1]
 secrets_path = src_root / ".streamlit" / "secrets.toml"
 if not os.path.exists(secrets_path):
     st.info("No secrets.toml file found. Please refer to the README to set up the .streamlit/secrets.toml file with your Google OAuth credentials.")
@@ -24,10 +24,13 @@ st.info("""
     """)
 
 # ── PATHS ────────────────────────────────────────────────────────────────
-parent_dir = Path(__file__).parents[3]
-DB_PATH = parent_dir / "portfolios.db" # need for persisting user data in the database
+parent_dir = Path(__file__).parents[1]
 
-
+DB_PATH = os.path.join(parent_dir, "portfolios.db") # need for persisting user data in the database
+if os.path.exists(DB_PATH) is False:
+    st.warning(f"Database not found. current path. Current path: {DB_PATH}")
+    st.stop()
+    
 # ── AUTHORIZATION ────────────────────────────────────────────────────────────────
 
 # initialize with the assumption that user will log in

@@ -5,3 +5,4 @@ bleh.py
 conda-lock.yml
 make_portable_env.py
 portfolios.db
+.streamlit

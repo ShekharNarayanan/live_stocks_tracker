@@ -2,11 +2,16 @@ import streamlit as st
 from pathlib import Path
 from utilities.db_utils import  fetch_portfolio_from_db
 from utilities.adjust_ui import render_company_blocks
+import os
 
 
 #  ── PATHS ────────────────────────────────────────────────────────────────
-parent_dir = Path(__file__).parents[3]
+parent_dir = Path(__file__).parents[1]
 DB_PATH = parent_dir / "portfolios.db"
+
+if os.path.exists(DB_PATH) is False:
+    st.warning(f"Database not found. current path. Current path: {DB_PATH}")
+    st.stop()
 
 #   ── DISPLAY PORTFOLIO ────────────────────────────────────────────────────────────────
 if "user_email" in st.session_state:
@@ -23,7 +28,6 @@ if "user_email" in st.session_state:
         horizontal=True,
     )
 
-    
     symbols, portfolio_df = fetch_portfolio_from_db(
     st.session_state.user_email,
     cap_size,  # default cap size for now
